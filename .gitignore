@@ -4,7 +4,8 @@ dist/
 .env
 .env.*
 !.env.example
-
+.env.development.local
+.env.production.local
 *.log
 npm-debug.log*
 yarn-debug.log*

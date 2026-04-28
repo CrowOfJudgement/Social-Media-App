@@ -41,6 +41,7 @@ userSchema.pre<IUser>('save', async function () {
   this.password = await generateHash(this.password)
 })
 
+
 const UserModel = model<IUser>('User', userSchema)
 
 export default UserModel

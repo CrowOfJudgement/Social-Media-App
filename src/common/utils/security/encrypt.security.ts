@@ -1,8 +1,13 @@
 import crypto from 'crypto'
+import { ENCRYPTION_KEY } from '../../../confing/config.service'
 
-const ENCRYPTION_KEY = crypto
+if (!ENCRYPTION_KEY) {
+  throw new Error('ENCRYPTION_KEY is not configured')
+}
+
+const encryptionKeyBuffer = crypto
   .createHash('sha256')
-  .update(process.env.ENCRYPTION_KEY || 'social-media-app-secret-key')
+  .update(ENCRYPTION_KEY)
   .digest()
 
 const IV_LENGTH = 16
@@ -24,7 +29,7 @@ export const decrypt = (value: string): string => {
 
   const decipher = crypto.createDecipheriv(
     'aes-256-cbc',
-    ENCRYPTION_KEY,
+    encryptionKeyBuffer,
     Buffer.from(ivHex, 'hex'),
   )
 
@@ -35,4 +40,3 @@ export const decrypt = (value: string): string => {
 
   return decryptedValue.toString('utf8')
 }
-

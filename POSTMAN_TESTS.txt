@@ -1,0 +1,124 @@
+Base URL
+http://localhost:3000
+
+
+1. Signup
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "userName": "Eslam",
+  "email": "eslam_test1@gmail.com",
+  "password": "12345678",
+  "cPassword": "12345678",
+  "phone": "01012345678",
+  "address": "Cairo",
+  "age": 22,
+  "gender": "male"
+}
+
+
+2. Confirm Email
+POST http://localhost:3000/auth/confirm-email
+Content-Type: application/json
+
+{
+  "email": "eslam_test1@gmail.com",
+  "otp": "123456"
+}
+
+Replace 123456 with the real OTP from email.
+
+
+3. Resend OTP
+POST http://localhost:3000/auth/resend-otp
+Content-Type: application/json
+
+{
+  "email": "eslam_test1@gmail.com"
+}
+
+
+4. Signin
+POST http://localhost:3000/auth/signin
+Content-Type: application/json
+
+{
+  "email": "eslam_test1@gmail.com",
+  "password": "12345678"
+}
+
+Save the accessToken from the response for the protected routes below.
+
+
+5. Forget Password
+POST http://localhost:3000/auth/forget-password
+Content-Type: application/json
+
+{
+  "email": "eslam_test1@gmail.com"
+}
+
+
+6. Reset Password
+POST http://localhost:3000/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "eslam_test1@gmail.com",
+  "otp": "123456",
+  "password": "87654321",
+  "cPassword": "87654321"
+}
+
+Replace 123456 with the real OTP from email.
+
+
+7. Update Password
+PATCH http://localhost:3000/auth/update-password
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "oldPassword": "87654321",
+  "password": "12345678",
+  "cPassword": "12345678"
+}
+
+
+8. Logout
+POST http://localhost:3000/auth/logout
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+
+{}
+
+
+9. Get Profile
+GET http://localhost:3000/users/profile
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+
+10. Admin Only
+GET http://localhost:3000/users/admin-only
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+Normal user should get 403 Forbidden.
+
+
+11. Google Signup
+POST http://localhost:3000/auth/signup-google
+Content-Type: application/json
+
+{
+  "idToken": "GOOGLE_ID_TOKEN_HERE"
+}
+
+
+12. Google Login
+POST http://localhost:3000/auth/login-google
+Content-Type: application/json
+
+{
+  "idToken": "GOOGLE_ID_TOKEN_HERE"
+}

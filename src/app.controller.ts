@@ -5,16 +5,18 @@ import cors from "cors";
 import helmet from "helmet";
 import {rateLimit} from "express-rate-limit";
 import { PORT } from "./confing/config.service";
-import { error, log } from "node:console";
 import { globalErrorHandler } from "./common/utils/global-error-handlier";
 import {appError} from "./common/utils/global-error-handlier";
 import authRouter from "./modules/auth/auth.controller";
 import connectDb from "./DB/connectionDb";
+import redisService from "./common/service/redis.service";
+import userRouter from "./modules/user/user.controller";
 const app: express.Application = express();
 const port=PORT;
 
-const bootstrap = () => {
-connectDb();
+const bootstrap = async () => {
+await connectDb();
+await redisService.connect();
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -31,6 +33,7 @@ app.use(cors());
 app.use(limiter);
 app.use(express.json());
 app.use("/auth", authRouter);
+app.use("/users", userRouter);
 
 app.get("/", (req:Request, res:Response,next:NextFunction) => {
     res.json({ message: "Welcome to the Social Media App " });
@@ -40,17 +43,12 @@ app.get("/", (req:Request, res:Response,next:NextFunction) => {
 
 
 
-app.use("{/*demo}", (req:Request, res:Response,next:NextFunction) => {
+app.use((req:Request, res:Response,next:NextFunction) => {
     //throw new Error(`URL: ${req.originalUrl} with method ${req.method} not found `,{cause:404})
     throw new appError(`URL: ${req.originalUrl} with method ${req.method} not found `,404)
 });
 
 app.use(globalErrorHandler)
-
-
-
-
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);   
