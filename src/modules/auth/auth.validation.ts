@@ -26,15 +26,6 @@ export const signUpSchema = {
 
 export type SignUp = z.infer<typeof signUpSchema['body']>
 
-export const signInSchema = {
-  body: z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters long'),
-  }),
-}
-
-export type SignIn = z.infer<typeof signInSchema['body']>
-
 export const resendOtpSchema = {
   body: z.object({
     email: z.string().email('Invalid email address'),
@@ -42,6 +33,15 @@ export const resendOtpSchema = {
 }
 
 export type ResendOtp = z.infer<typeof resendOtpSchema['body']>
+
+export const signInSchema = {
+  body: resendOtpSchema.body.safeExtend({
+    password: z.string().min(6, 'Password must be at least 6 characters long'),
+    fcm: z.string(),
+  }),
+}
+
+export type SignIn = z.infer<typeof signInSchema['body']>
 
 export const confirmEmailSchema = {
   body: z.object({

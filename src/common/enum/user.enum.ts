@@ -14,3 +14,9 @@ export enum RoleEnum {
   User = 'user',
   Admin = 'admin',
 }
+
+export enum AvailabilityEnum {
+  Public = 'public',
+  Private = 'private',
+  Friends = 'friends',
+}

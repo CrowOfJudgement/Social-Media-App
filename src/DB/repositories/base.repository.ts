@@ -1,5 +1,4 @@
 import { HydratedDocument, Model, QueryFilter } from 'mongoose'
-import { skip } from 'node:test'
 
 class BaseRepository<TDocument> {
   constructor(protected readonly model: Model<TDocument>) {}
@@ -20,6 +19,48 @@ class BaseRepository<TDocument> {
   async find({ filter, projection, options }:
      { filter: QueryFilter<TDocument>, projection?: any ,options?: any }): Promise<HydratedDocument<TDocument>[]> {
     return this.model.find(filter, projection).sort(options).exec()
+  }
+
+  async paginate({
+    page,
+    limit,
+    sort,
+    populate,
+    search,
+  }: {
+    page?: number
+    limit?: number
+    sort?: any
+    populate?: any
+    search?: QueryFilter<TDocument>
+  }) {
+    page = +page! || 1
+    limit = +limit! || 2
+
+    if (page < 1) page = 1
+    if (limit < 1) limit = 2
+
+    const skip = (page - 1) * limit
+
+    const [data, totalDoc] = await Promise.all([
+      this.model.find({ ...(search ?? {}) })
+      .skip(skip)
+      .limit(limit)
+      .populate(populate).sort(sort),
+      this.model.countDocuments({ ...(search ?? {}) }),
+    ])
+
+    const totalPages = Math.ceil(totalDoc / limit)
+
+    return {
+      meta: {
+        currentPage: page,
+        totalPages,
+        limit,
+        totalDoc,
+      },
+      data,
+    }
   }
 
   async update(id: string, data: Partial<TDocument>): Promise<HydratedDocument<TDocument> | null> {

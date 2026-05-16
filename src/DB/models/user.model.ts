@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose'
+import { Schema, Types, model, Document } from 'mongoose'
 import { GenderEnum, ProviderEnum, RoleEnum } from '../../common/enum/user.enum'
 import { generateHash } from '../../common/utils/security/hash'
 
@@ -13,6 +13,7 @@ export interface IUser extends Document {
   role?: RoleEnum
   provider?: ProviderEnum
   isConfirmed?: boolean
+  friends?: Types.ObjectId[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -29,6 +30,7 @@ const userSchema = new Schema<IUser>(
     role: { type: String, enum: Object.values(RoleEnum), default: RoleEnum.User },
     provider: { type: String, enum: Object.values(ProviderEnum), default: ProviderEnum.Local },
     isConfirmed: { type: Boolean, default: false },
+    friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   {
     timestamps: true,

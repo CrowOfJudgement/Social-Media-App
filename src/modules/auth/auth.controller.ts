@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { authentication } from '../../common/middleware/authentication'
+import multerCloud from '../../common/middleware/multer.cloud'
 import { Validation } from '../../common/middleware/validation'
 import {
   confirmEmailSchema,
@@ -25,5 +26,6 @@ router.post('/forget-password', Validation(forgetPasswordSchema), authService.fo
 router.post('/reset-password', Validation(resetPasswordSchema), authService.resetPassword)
 router.patch('/update-password', authentication, Validation(updatePasswordSchema), authService.updatePassword)
 router.post('/logout', authentication, authService.logout)
+router.post('/upload', authentication, multerCloud({}).array('files'), authService.uploadImage)
 
 export default router

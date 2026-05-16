@@ -4,10 +4,13 @@ import { HydratedDocument } from 'mongoose'
 import { randomBytes } from 'node:crypto'
 import { emailEnum } from '../../common/enum/email.enum'
 import { ProviderEnum } from '../../common/enum/user.enum'
+import notificationService from '../../common/service/notification.service'
 import redisService from '../../common/service/redis.service'
+import s3Service from '../../common/service/s3.service'
 import { otpEmailTemplate } from '../../common/utils/email/email.template'
 import { sendEmail, generateOtp } from '../../common/utils/email/send.email'
 import { appError } from '../../common/utils/global-error-handlier'
+import { successResponse } from '../../common/utils/response.sucsess'
 import { compareHash } from '../../common/utils/security/hash'
 import { signToken } from '../../common/utils/security/token'
 import { IUser } from '../../DB/models/user.model'
@@ -128,7 +131,7 @@ class AuthService {
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, password }: SigninRequestBody = req.body
+      const { email, password, fcm }: SigninRequestBody = req.body
 
       const user = await this._userModel.findOne({
         filter: { email },
@@ -145,6 +148,19 @@ class AuthService {
 
       if (user.provider === ProviderEnum.Local && !user.isConfirmed) {
         throw new appError('Please confirm your email first', 403)
+      }
+      
+      if (fcm) {
+        await redisService.addFCM(user._id, fcm)
+        const tokens = await redisService.getFCMS(user._id)
+
+        await notificationService.sendNotifications({
+          tokens,
+          data: {
+            title: `hi ${user.userName}`,
+            body: `new login at ${new Date().toISOString()}`,
+          },
+        })
       }
 
       res.status(200).json(this.createAuthResponse(user, 'Signin successful'))
@@ -352,6 +368,25 @@ class AuthService {
       })
 
       res.status(200).json({ message: 'Logged out successfully' })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  uploadImage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const files = req.files as Express.Multer.File[] | undefined
+
+      if (!files?.length) {
+        throw new appError('Image files are required', 400)
+      }
+
+      const key = await s3Service.uploadFiles({
+        files,
+        path: 'users/many',
+      })
+
+      successResponse({ res, data: key })
     } catch (error) {
       next(error)
     }

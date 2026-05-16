@@ -57,6 +57,10 @@ class RedisService {
     return `otp::${email}::${subject}`
   }
 
+  fcm_key = (userId: Types.ObjectId | string) => {
+    return `user:FCM:${userId}`
+  }
+
   setValue = async ({ key, value, ttl }: { key: RedisArgument, value: string, ttl?: number }) => {
     try {
       if (!this.isConnected) return null
@@ -108,6 +112,56 @@ class RedisService {
       return await this.client.del(key)
     } catch (error) {
       console.error('fail to delete key', error)
+      return 0
+    }
+  }
+
+  addFCM = async (userId: Types.ObjectId | string, fcmToken: string) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.sAdd(this.fcm_key(userId), fcmToken)
+    } catch (error) {
+      console.error('fail to add fcm token', error)
+      return 0
+    }
+  }
+
+  removeFCM = async (userId: Types.ObjectId | string, fcmToken: string) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.sRem(this.fcm_key(userId), fcmToken)
+    } catch (error) {
+      console.error('fail to remove fcm token', error)
+      return 0
+    }
+  }
+
+  getFCMS = async (userId: Types.ObjectId | string) => {
+    try {
+      if (!this.isConnected) return []
+      return await this.client.sMembers(this.fcm_key(userId))
+    } catch (error) {
+      console.error('fail to get fcm tokens', error)
+      return []
+    }
+  }
+
+  hasFCMS = async (userId: Types.ObjectId | string) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.sCard(this.fcm_key(userId))
+    } catch (error) {
+      console.error('fail to count fcm tokens', error)
+      return 0
+    }
+  }
+
+  removeFCMUser = async (userId: Types.ObjectId | string) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.del(this.fcm_key(userId))
+    } catch (error) {
+      console.error('fail to remove user fcm tokens', error)
       return 0
     }
   }

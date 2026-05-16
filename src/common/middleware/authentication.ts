@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from 'express'
 import { appError } from '../utils/global-error-handlier'
 import { verifyToken } from '../utils/security/token'
 import redisService from '../service/redis.service'
+import userRepository from '../../DB/repositories/user.repository'
+
+const userRepo = new userRepository()
 
 export const authentication = async (req: Request, _res: Response, next: NextFunction) => {
   try {
@@ -23,7 +26,13 @@ export const authentication = async (req: Request, _res: Response, next: NextFun
       throw new appError('Token has been revoked', 401)
     }
 
+    const user = await userRepo.findById(decoded.sub)
+    if (!user) {
+      throw new appError('User not found', 404)
+    }
+
     req.decoded = decoded
+    req.user = user
     next()
   } catch (error) {
     next(error)
