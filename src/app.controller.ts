@@ -5,6 +5,15 @@ import { pipeline } from "node:stream/promises";
 import cors from "cors";
 import helmet from "helmet";
 import {rateLimit} from "express-rate-limit";
+import { createHandler } from "graphql-http/lib/use/express";
+import {
+    GraphQLInt,
+    GraphQLList,
+    GraphQLNonNull,
+    GraphQLObjectType,
+    GraphQLSchema,
+    GraphQLString
+} from "graphql";
 import { PORT } from "./confing/config.service";
 import { globalErrorHandler } from "./common/utils/global-error-handlier";
 import {appError} from "./common/utils/global-error-handlier";
@@ -20,15 +29,52 @@ import { successResponse } from "./common/utils/response.sucsess";
 const app: express.Application = express();
 const port=PORT;
 
+const users = [
+    { id: 1, age: 23, name: "eslam", gender: "male" },
+    { id: 2, age: 21, name: "gamal", gender: "female" },
+    { id: 3, age: 27, name: "test", gender: "male" }
+];
+
+const userType = new GraphQLObjectType({
+    name: "User",
+    fields: {
+        id: { type: GraphQLInt },
+        age: { type: GraphQLInt },
+        name: { type: GraphQLString },
+        gender: { type: GraphQLString }
+    }
+});
+
+const schema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+        name: "Query",
+        fields: {
+            getUser: {
+                type: userType,
+                args: {
+                    id: { type: new GraphQLNonNull(GraphQLInt) }
+                },
+                resolve: (_parent, args: { id: number }) => {
+                    return users.find((user) => user.id === args.id) ?? null;
+                }
+            },
+            listUsers: {
+                type: new GraphQLList(userType),
+                resolve: () => users
+            }
+        }
+    })
+});
+
 const bootstrap = async () => {
 await connectDb();
 await redisService.connect();
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
+    standardHeaders: true, 
+    legacyHeaders: false, 
     handler: (req:Request, res:Response,next:NextFunction) => {
 throw new appError(`Too many requests from this IP, please try again after 15 minutes`,429)
     }
@@ -42,6 +88,7 @@ app.use("/auth", authRouter);
 app.use("/comments", commentRouter);
 app.use("/posts", postRouter);
 app.use("/users", userRouter);
+app.use("/graphql", createHandler({ schema }));
 
 app.get("/", (req:Request, res:Response,next:NextFunction) => {
     res.json({ message: "Welcome to the Social Media App " });
