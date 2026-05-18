@@ -15,3 +15,13 @@ export const authorization = (...roles: RoleEnum[]) => {
     next()
   }
 }
+
+export const graphql_authorization = async (roles: RoleEnum[], role?: string) => {
+  if (!role) {
+    throw new appError('Unauthorized', 401)
+  }
+
+  if (!roles.includes(role as RoleEnum)) {
+    throw new appError('Forbidden', 403)
+  }
+}

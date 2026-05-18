@@ -77,6 +77,20 @@ class UserService {
     }
   }
 
+  getGraphqlUserById = async (id: string) => {
+    const user = await this._userModel.findById(id)
+    if (!user) {
+      throw new appError('User not found', 404)
+    }
+
+    return this.sanitizeUser(user)
+  }
+
+  getGraphqlUsers = async () => {
+    const users = await this._userModel.find({ filter: {} })
+    return users.map(user => this.sanitizeUser(user))
+  }
+
   updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.decoded?.sub
