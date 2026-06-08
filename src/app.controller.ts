@@ -10,6 +10,7 @@ import { PORT } from "./confing/config.service";
 import { globalErrorHandler } from "./common/utils/global-error-handlier";
 import {appError} from "./common/utils/global-error-handlier";
 import authRouter from "./modules/auth/auth.controller";
+import chatRouter from "./modules/chat/chat.controller";
 import connectDb from "./DB/connectionDb";
 import redisService from "./common/service/redis.service";
 import s3Service from "./common/service/s3.service";
@@ -20,6 +21,7 @@ import schema from "./modules/graphql/graphql.schema";
 import userRouter from "./modules/user/user.controller";
 import notificationService from "./common/service/notification.service";
 import { successResponse } from "./common/utils/response.sucsess";
+import socketGateway from "./realtime/socket.gateway";
 const app: express.Application = express();
 const port=PORT;
 
@@ -42,6 +44,7 @@ app.use(cors());
 app.use(limiter);
 app.use(express.json());
 app.use("/auth", authRouter);
+app.use("/chat", chatRouter);
 app.use("/comments", commentRouter);
 app.use("/posts", postRouter);
 app.use("/users", userRouter);
@@ -118,11 +121,13 @@ app.use((req:Request, res:Response,next:NextFunction) => {
 
 app.use(globalErrorHandler)
 
-app.listen(port, () => {
+const httpServer = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);   
 })
-}   
 
+await socketGateway.initIo(httpServer)
+
+}   
 
 
 export default bootstrap;

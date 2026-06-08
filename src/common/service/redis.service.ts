@@ -61,6 +61,10 @@ class RedisService {
     return `user:FCM:${userId}`
   }
 
+  socketKey = (userId: Types.ObjectId | string) => {
+    return `user:Socket:${userId}`
+  }
+
   setValue = async ({ key, value, ttl }: { key: RedisArgument, value: string, ttl?: number }) => {
     try {
       if (!this.isConnected) return null
@@ -162,6 +166,56 @@ class RedisService {
       return await this.client.del(this.fcm_key(userId))
     } catch (error) {
       console.error('fail to remove user fcm tokens', error)
+      return 0
+    }
+  }
+
+  addSocket = async ({ userId, socketId }: { userId: Types.ObjectId | string, socketId: string }) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.sAdd(this.socketKey(userId), socketId)
+    } catch (error) {
+      console.error('fail to add socket id', error)
+      return 0
+    }
+  }
+
+  removeSocket = async ({ userId, socketId }: { userId: Types.ObjectId | string, socketId: string }) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.sRem(this.socketKey(userId), socketId)
+    } catch (error) {
+      console.error('fail to remove socket id', error)
+      return 0
+    }
+  }
+
+  getSockets = async (userId: Types.ObjectId | string) => {
+    try {
+      if (!this.isConnected) return []
+      return await this.client.sMembers(this.socketKey(userId))
+    } catch (error) {
+      console.error('fail to get socket ids', error)
+      return []
+    }
+  }
+
+  hasSockets = async (userId: Types.ObjectId | string) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.sCard(this.socketKey(userId))
+    } catch (error) {
+      console.error('fail to count socket ids', error)
+      return 0
+    }
+  }
+
+  removeSocketUser = async (userId: Types.ObjectId | string) => {
+    try {
+      if (!this.isConnected) return 0
+      return await this.client.del(this.socketKey(userId))
+    } catch (error) {
+      console.error('fail to remove user socket ids', error)
       return 0
     }
   }
